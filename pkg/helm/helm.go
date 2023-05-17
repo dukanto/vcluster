@@ -77,7 +77,7 @@ func (c *client) Upgrade(ctx context.Context, name, namespace string, options Up
 }
 
 func (c *client) Pull(ctx context.Context, name string, options UpgradeOptions) error {
-	return c.run(ctx, name, "", options, "pull", []string{})
+	return c.pull(ctx, name, options)
 }
 
 func (c *client) Rollback(ctx context.Context, name, namespace string) error {
