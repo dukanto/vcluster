@@ -250,7 +250,7 @@ func (c *client) execute(ctx context.Context, args []string, operation string) e
 }
 
 func isOCI(repo string) bool {
-	return strings.HasPrefix(repo, "oci//")
+	return strings.HasPrefix(repo, "oci://")
 }
 
 func (c *client) Delete(name, namespace string) error {
