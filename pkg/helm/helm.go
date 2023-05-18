@@ -178,13 +178,7 @@ func (c *client) run(ctx context.Context, name, namespace string, options Upgrad
 		args = append(args, "--atomic")
 	}
 
-	cmd := exec.CommandContext(ctx, c.helmPath, args...)
-
-	if options.WorkDir != "" {
-		cmd.Dir = options.WorkDir
-	}
-
-	return c.execute(ctx, args, command)
+	return c.execute(ctx, args, command, options.WorkDir)
 }
 
 func (c *client) pull(ctx context.Context, name string, options UpgradeOptions) error {
@@ -218,7 +212,11 @@ func (c *client) pull(ctx context.Context, name string, options UpgradeOptions) 
 		args = append(args, "--version", options.Version)
 	}
 
-	return c.execute(ctx, args, "pull")
+	if options.Insecure {
+		args = append(args, "--insecure-skip-tls-verify")
+	}
+	
+	return c.execute(ctx, args, "pull", options.WorkDir)
 }
 
 func (c *client) login(ctx context.Context, options UpgradeOptions) error {
@@ -232,12 +230,17 @@ func (c *client) login(ctx context.Context, options UpgradeOptions) error {
 	if options.Insecure {
 		loginArgs = append(loginArgs, "--insecure")
 	}
-	return c.execute(ctx, loginArgs, "login")
+	return c.execute(ctx, loginArgs, "login", options.WorkDir)
 }
 
 func (c *client) execute(ctx context.Context, args []string, operation string) error {
 	c.log.Info("execute command: helm " + strings.Join(args, " "))
 	cmd := exec.CommandContext(ctx, c.helmPath, args...)
+	
+	if workdir != "" {
+		cmd.Dir = workdir
+	}
+
 	output, err := cmd.CombinedOutput()
 
 	if ctx.Err() == context.DeadlineExceeded {
