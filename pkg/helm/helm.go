@@ -199,6 +199,8 @@ func (c *client) pull(ctx context.Context, name string, options UpgradeOptions) 
 			return fmt.Errorf("error login to registry: %s", err)
 		}
 	}
+	defer c.logout(ctx, options)
+
 	args := []string{"pull"}
 	if isOCI(options.Repo) {
 		fullChart := options.Repo + "/" + options.Chart
@@ -233,7 +235,22 @@ func (c *client) login(ctx context.Context, options UpgradeOptions) error {
 	return c.execute(ctx, loginArgs, "login", options.WorkDir)
 }
 
-func (c *client) execute(ctx context.Context, args []string, operation string) error {
+func (c *client) logout(ctx context.Context, options UpgradeOptions) {
+	url, err := url.Parse(options.Repo)
+	if err != nil {
+		return
+	}
+	host := url.Hostname()
+	logoutArgs := []string{"registry", "logout", host}
+	if options.Insecure {
+		logoutArgs = append(logoutArgs, "--insecure")
+	}
+	_ = c.execute(ctx, logoutArgs, "login", "")
+	// do not return error
+	return
+}
+
+func (c *client) execute(ctx context.Context, args []string, operation string, workdir string) error {
 	c.log.Info("execute command: helm " + strings.Join(args, " "))
 	cmd := exec.CommandContext(ctx, c.helmPath, args...)
 	
