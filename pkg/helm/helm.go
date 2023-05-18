@@ -3,6 +3,7 @@ package helm
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -221,8 +222,13 @@ func (c *client) pull(ctx context.Context, name string, options UpgradeOptions) 
 }
 
 func (c *client) login(ctx context.Context, options UpgradeOptions) error {
-	repo := strings.TrimPrefix(options.Repo, "oci://")
-	loginArgs := []string{"registry", "login", "--username", options.Username, "--password", options.Password, repo}
+	
+	url, err := url.Parse(options.Repo)
+	if err != nil {
+		return fmt.Errorf("Error login in, repo is not a valid URL: %s", options.Repo)
+	}
+	host := url.Hostname()
+	loginArgs := []string{"registry", "login", "--username", options.Username, "--password", options.Password, host}
 	if options.Insecure {
 		loginArgs = append(loginArgs, "--insecure")
 	}
